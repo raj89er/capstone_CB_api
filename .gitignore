@@ -1,0 +1,12 @@
+
+# ignore the environment files
+.env
+# ignore the virtual environment folders
+/venv
+# ignore files with specific names
+idea.txt
+# ignore all folders with the name '__pycache__' in it
+__pycache__
+# ignore all folders with the name 'node_modules' in it
+/node_modules
+
