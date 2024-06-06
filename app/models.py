@@ -16,7 +16,7 @@ class User(db.Model):
     token_expiration = db.Column(db.DateTime, nullable=True)
     recipes = db.relationship('Recipe', backref='author', lazy=True)
     favorites = db.relationship('Favorite', backref='user', lazy=True)
-
+    
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if 'password' in kwargs:
@@ -27,9 +27,9 @@ class User(db.Model):
 
     def set_password(self, password):
         if len(password) <= 7:
-            return "Safe, your recipes must be, 8 characters long your password should be."
+            raise ValueError("Safe, your recipes must be, 8 characters long your password should be.")
         if not any(char.isdigit() for char in password):
-            return "A number and letter. your password must contain,"
+            raise ValueError("A number and letter. your password must contain,")
         try:
             self.password = generate_password_hash(password)
             db.session.commit()
@@ -37,7 +37,6 @@ class User(db.Model):
         except Exception as e:
             db.session.rollback()
             return f"There was a disturbance in the force.. somewhere around: {e}"
-        
 
     def check_password(self, password):
         return check_password_hash(self.password, password)
@@ -73,10 +72,14 @@ class User(db.Model):
     
     def update_password(self, current_password, new_password):
         if not self.check_password(current_password):
-            return f"You're memorey has been tampered with. your old password is incorrect"
-        self.set_password(new_password)
-        return f"The account for {self.username} has been secured."
-        
+            return f"You're memory has been tampered with. your old password is incorrect"
+        try:
+            self.set_password(new_password)
+            return f"The account for {self.username} has been secured."
+        except ValueError as e:
+            return str(e)
+        except Exception as e:
+            return f"There was a disturbance in the force.. somewhere around: {e}"
 
     def get_token(self):
         now = datetime.now(timezone.utc)
@@ -102,13 +105,12 @@ class Recipe(db.Model):
     instructions = db.Column(db.Text, nullable=False)
     favorites = db.relationship('Favorite', backref='recipe', lazy=True)
         
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def __repr__(self):
-        return f'<Recipe "{self.title}".>'
-    
+        return f'<Recipe "{self.title}">'
+
     def save(self):
         db.session.add(self)
         db.session.commit()
@@ -125,15 +127,23 @@ class Recipe(db.Model):
             db.session.rollback()
             return False, f'Error updating recipe: {e}'
 
-
     def delete(self):
         db.session.delete(self)
         db.session.commit()
 
     def to_dict(self):
-        return {column.name: getattr(self, column.name) for column in self.__table__.columns}
-        
-        
+        data = {
+            'recipe_id': self.recipe_id,
+            'user_id': self.user_id,
+            'title': self.title,
+            'date_created': self.date_created,
+            'date_updated': self.date_updated,
+            'ingredients': self.ingredients,
+            'instructions': self.instructions
+        }
+        return data
+
+
 class Favorite(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), primary_key=True)
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.recipe_id'), primary_key=True)
@@ -141,3 +151,11 @@ class Favorite(db.Model):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        
+    def to_dict(self):
+        data = {
+            'user_id': self.user_id,
+            'recipe_id': self.recipe_id,
+            'is_fav': self.is_fav
+        }
+        return data

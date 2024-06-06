@@ -9,4 +9,5 @@ idea.txt
 __pycache__
 # ignore all folders with the name 'node_modules' in it
 /node_modules
-
+# ignore all files with the extension '.zip'
+*.zip
