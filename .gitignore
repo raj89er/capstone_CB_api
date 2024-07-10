@@ -3,6 +3,7 @@
 .env
 # ignore the virtual environment folders
 /venv
+/myenv
 # ignore files with specific names
 idea.txt
 # ignore all folders with the name '__pycache__' in it

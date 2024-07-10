@@ -2,8 +2,10 @@
 from app import db
 import secrets
 from datetime import datetime, timedelta, timezone
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask_bcrypt import Bcrypt
+# from werkzeug.security import generate_password_hash, check_password_hash     ## replaced due to deprecation
 
+bcrypt = Bcrypt()
 
 class User(db.Model):
     user_id = db.Column(db.Integer, primary_key=True)
@@ -31,7 +33,8 @@ class User(db.Model):
         if not any(char.isdigit() for char in password):
             raise ValueError("A number and letter. your password must contain,")
         try:
-            self.password = generate_password_hash(password)
+            # self.password = generate_password_hash(password)   ## replaced due to deprecation
+            self.password = bcrypt.generate_password_hash(password).decode('utf-8')
             db.session.commit()
             return f"User {self.username}'s account has been secured."
         except Exception as e:
@@ -39,7 +42,8 @@ class User(db.Model):
             return f"There was a disturbance in the force.. somewhere around: {e}"
 
     def check_password(self, password):
-        return check_password_hash(self.password, password)
+        # return check_password_hash(self.password, password)   ## replaced due to deprecation
+        return bcrypt.check_password_hash(self.password, password)
 
     def save(self):
         db.session.add(self)
